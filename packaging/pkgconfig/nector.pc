@@ -1,0 +1,10 @@
+prefix=${pcfiledir}/../..
+exec_prefix=${prefix}
+libdir=${prefix}/library
+includedir=${prefix}/library/include
+
+Name: Nector
+Description: C++17 UI rendering and scene library
+Version: 0.1.0
+Libs: ${libdir}/static/Nector.dll.a
+Cflags: -I${includedir}

@@ -1,0 +1,14 @@
+{
+  "platform": "linux",
+  "environment_script": "metadata/nctorvars.sh",
+  "shared_library_extension": ".so",
+  "link_library_suffix": ".a",
+  "path_entries": [
+    "library"
+  ],
+  "library_path_variable": "LD_LIBRARY_PATH",
+  "primary_libraries": [
+    "library/libNector.so",
+    "library/libNector.DslCompile.so"
+  ]
+}

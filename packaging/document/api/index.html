@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nector 0.1.0 API Overview</title>
+<style>
+:root{color-scheme:light;--bg:#f4f7fb;--panel:#fff;--ink:#172033;--muted:#5d6a7e;--line:#dbe3ee;--accent:#2563eb;--code:#eef3fa}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif}main{max-width:1040px;margin:0 auto;padding:48px 24px}header{padding:32px;border-radius:18px;background:linear-gradient(135deg,#172554,#2563eb);color:#fff}header p{margin-bottom:0;color:#dbeafe}nav{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:20px}header nav a{color:#fff;text-decoration:none}header nav a:hover{text-decoration:underline}section{margin-top:22px;padding:26px 30px;background:var(--panel);border:1px solid var(--line);border-radius:14px}h1,h2,h3{margin-top:0;line-height:1.25}h2{font-size:1.3rem}h3{font-size:1.05rem;margin-bottom:.4rem}code,pre{font-family:Consolas,"SFMono-Regular",monospace}code{background:var(--code);padding:.12em .35em;border-radius:4px;overflow-wrap:anywhere}pre{overflow:auto;padding:18px;background:#111827;color:#e5e7eb;border-radius:10px;line-height:1.5}pre code{padding:0;background:none;color:inherit;overflow-wrap:normal}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:10px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted)}.table-wrap{overflow-x:auto}.muted{color:var(--muted)}.note{border-left:4px solid var(--accent);padding-left:16px}a{color:var(--accent)}li{margin:.35em 0}@media(max-width:640px){main{padding:20px 12px}header,section{padding:20px}table{font-size:14px}}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>API overview</h1>
+<p>Nector 0.1.0 exposes a C API and move-only C++17 RAII wrappers.</p>
+<nav aria-label="Documentation"><a href="../index.html">Package guide</a><a href="index.html">API</a><a href="../guides/quick-start.html">Quick start</a><a href="../guides/dsl.html">DSL</a><a href="../guides/fonts.html">Fonts</a><a href="../guides/packaging.html">Packaging</a><a href="../changelog.html">Changelog</a></nav>
+</header>
+<section>
+<h2>Choose an entry point</h2>
+<p>Include <code>&lt;nector.hpp&gt;</code> for the complete C++ API, or include individual C headers to use only the required modules. Nector is not header-only: applications must link the implementation libraries and make shared libraries discoverable at runtime.</p>
+<p>The C API uses opaque handles and <code>nector_status</code>. Every successful create or load operation that returns an owned handle has a corresponding destroy or unload function. Check status values and use <code>nectorGetLastError()</code> for diagnostic detail.</p>
+<p>The C++ wrappers destroy owned handles automatically, delete copying, support moves, and translate failing status returns into <code>nector::Error</code>. Use <code>Error::status()</code> to inspect the <code>nector::Status</code>.</p>
+<pre><code>#include &lt;nector.hpp&gt;
+
+int main() {
+    nector::Surface surface(320, 200);
+    nector::Painter painter(surface);
+    painter.setFillColor({0.15F, 0.25F, 0.45F, 1.0F});
+    painter.fillRectangle({0.0F, 0.0F, 320.0F, 200.0F});
+    const auto pixels = surface.readPixels();
+    return pixels.size() == 320U * 200U * 4U ? 0 : 1;
+}</code></pre>
+<p class="note"><code>Node</code> is a non-owning scene-node wrapper. Accessors such as <code>Window::input()</code>, <code>Window::scene()</code>, <code>CdslPackage::scene()</code>, and the painter in <code>UiEvent</code> also expose borrowed resources. Keep their owners alive for the full period of use. In particular, a <code>Window</code> borrows its <code>Scene</code>.</p>
+</section>
+<section>
+<h2>Headers and primary operations</h2>
+<p>The header links below are relative to this document inside the packaged distribution. They are the authoritative declarations and contain the complete function lists.</p>
+<div class="table-wrap">
+<table>
+<tr><th>Header</th><th>C API highlights</th><th>C++ wrappers and types</th></tr>
+<tr><td><a href="../../library/include/core.h"><code>core.h</code></a></td><td><code>nectorGetVersion</code>, <code>nectorGetLastError</code>, <code>nectorClearError</code>, <code>nectorStatusText</code>, <code>nectorCoreSetError</code>, <code>nectorCoreValidateUtf8</code>, and <code>nectorCoreCrc32</code>. Defines status codes and basic point, rectangle, color, and transform structures.</td><td><code>Status</code>, <code>Error</code>, <code>getVersion</code>, <code>getLastError</code>, <code>clearError</code>, <code>statusText</code>, <code>validateUtf8</code>, and <code>crc32</code>.</td></tr>
+<tr><td><a href="../../library/include/rasterization.h"><code>rasterization.h</code></a></td><td>Surface creation, clearing, and RGBA pixel access; path construction; painter state, clipping, transforms, solid and gradient fills, extended stroking with dashes and miter limits, masks, and surface drawing. Principal functions use the <code>nectorCreate*</code>, <code>nectorPath*</code>, and <code>nectorPainter*</code> families.</td><td><code>Surface</code>, <code>Path</code>, and <code>Painter</code>; <code>StrokeStyle</code>, <code>FillRule</code>, <code>LineCap</code>, and <code>LineJoin</code>.</td></tr>
+<tr><td><a href="../../library/include/font.h"><code>font.h</code></a></td><td><code>nectorLoadFont</code> and <code>nectorLoadFontMemory</code> load a face. <code>nectorFontGetFaceCount</code>, <code>nectorFontGetMetrics</code>, <code>nectorFontMeasureText</code>, <code>nectorFontDrawText</code>, and <code>nectorFontGetGlyphPath</code> inspect and render text.</td><td><code>Font</code>, including <code>fromMemory</code>, <code>faceCount</code>, <code>metrics</code>, <code>measureText</code>, <code>drawText</code>, and <code>getGlyphPath</code>; <code>FontMetrics</code> and <code>TextMetrics</code>.</td></tr>
+<tr><td><a href="../../library/include/image.h"><code>image.h</code></a></td><td><code>nectorImageLoad</code>, <code>nectorImageLoadMemory</code>, <code>nectorImageLoadSvg</code>, and <code>nectorImageCreate</code> create images. Additional functions read pixels, draw with opacity, and save PNG or BMP.</td><td><code>Image</code> (also aliased as <code>NImage</code>) with <code>load</code>, <code>loadMemory</code>, <code>loadSvg</code>, <code>create</code>, <code>readPixels</code>, <code>draw</code>, <code>savePng</code>, and <code>saveBmp</code>; <code>ImageFormat</code>.</td></tr>
+<tr><td><a href="../../library/include/nimation.h"><code>nimation.h</code></a></td><td>Create keyframe, 1–60 frame, Flipbook, or Hybrid timelines. Add easing keys and inclusive Behaviour frame spans, retain frame images, seek, tick, loop, and sample transforms or the current image.</td><td><code>Animation</code>, <code>NImation</code>, <code>NImation::Timeline</code>, <code>NImation::Behaviour</code>, <code>NImation::Flipbook</code>, and <code>NImation::Hybrid</code>. Use <code>NImation anim(60)</code>, <code>addBehaviour</code>, <code>timeline</code>, and <code>sampleTransform</code>.</td></tr>
+<tr><td><a href="../../library/include/input.h"><code>input.h</code></a></td><td><code>nectorInputPush</code>, <code>nectorInputPoll</code>, and <code>nectorInputPeek</code> manage events. Explicit-timestamp input and key-state functions support deterministic pressed, released, repeat, and held-key queries; held state changes from 1 to 2 only after more than 500 ms.</td><td><code>Input</code>, <code>InputEvent</code>, <code>InputEventType</code>, <code>Key</code>, and <code>NKeystroke</code>. <code>NKeystroke::signal</code> names keys and <code>state</code> or <code>stateAt</code> returns 0, 1, or 2.</td></tr>
+<tr><td><a href="../../library/include/scene.h"><code>scene.h</code></a></td><td>Create scenes, add, find, and remove nodes, access typed properties, set fonts and images, register event callbacks, emit events, bind animations, tick, lay out, draw, and handle input.</td><td><code>Scene</code>, <code>Node</code>, <code>NodeType</code>, <code>NodeProperty</code>, <code>UiEvent</code>, <code>UiEventType</code>, and <code>EventCallback</code>.</td></tr>
+<tr><td><a href="../../library/include/interface.h"><code>interface.h</code></a></td><td>Create an interface context, generic controls, scrolling Rows, and Buttons. Configure horizontal or vertical layout, clamp scrolling, access Row parts, register callbacks, and toggle the lightweight glass style.</td><td><code>NInterface</code>, <code>NInterface::Control</code>, <code>NInterface::Row</code>, and <code>NInterface::Button</code>. Construct controls with the context; <code>row.layout = 1</code> selects vertical layout and <code>button.glass = true</code> enables glass.</td></tr>
+<tr><td><a href="../../library/include/audio.h"><code>audio.h</code></a></td><td>Create an audio context; load sounds from files or memory; unload sounds; play, pause, stop, seek, loop, and inspect duration; get or set volume.</td><td><code>Audio</code> owns the context and loads move-only <code>Sound</code> objects. <code>Sound</code> provides playback, volume, looping, state, seek, and duration methods.</td></tr>
+<tr><td><a href="../../library/include/platform.h"><code>platform.h</code></a></td><td>Create applications and windows, show, hide, close, and render windows, access input and scene handles, process events, run or quit the event loop, and query the platform name.</td><td><code>Application</code> and <code>Window</code>. <code>Application::createWindow</code>, <code>processEvents</code>, <code>run</code>, and <code>quit</code> wrap application control.</td></tr>
+<tr><td><a href="../../library/include/dsl_comp.h"><code>dsl_comp.h</code></a></td><td><code>nectorCdslCompileText</code> and <code>nectorCdslCompileFile</code> compile DSL. Buffers from text compilation use <code>nectorCdslFreeBuffer</code>. Load packages, get their scenes, invoke and enumerate actions, and register event callbacks.</td><td><code>CdslPackage</code> with <code>compileText</code>, <code>compileFile</code>, <code>load</code>, <code>loadMemory</code>, <code>scene</code>, <code>call</code>, <code>hasAction</code>, <code>actionCount</code>, <code>actionId</code>, and <code>setEventCallback</code>.</td></tr>
+<tr><td><a href="../../library/include/nector.hpp"><code>nector.hpp</code></a></td><td>Includes every public C header listed above.</td><td>Defines all C++ wrappers, aliases the basic C geometry and metric structures, and provides <code>Size</code> plus the common error and utility functions.</td></tr>
+</table>
+</div>
+</section>
+<section>
+<h2>Link the API you use</h2>
+<p>With the packaged CMake configuration, link <code>Nector::nector</code> for the monolithic library. Add <code>Nector::nector_dsl_compile</code> when using CDSL. Modular targets are available as <code>Nector::nector_core</code>, <code>Nector::nector_rasterization</code>, <code>Nector::nector_font</code>, <code>Nector::nector_image</code>, <code>Nector::nector_nimation</code>, <code>Nector::nector_input</code>, <code>Nector::nector_scene</code>, <code>Nector::nector_audio</code>, <code>Nector::nector_platform</code>, and <code>Nector::nector_interface</code>.</p>
+<p>See the <a href="../guides/quick-start.html">quick start</a> for complete integration and the <a href="../guides/dsl.html">DSL guide</a> for data-package compilation and loading.</p>
+</section>
+</main>
+</body>
+</html>

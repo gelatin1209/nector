@@ -1,0 +1,13 @@
+{
+  "platform": "windows",
+  "environment_script": "metadata/nctorvars.cmd",
+  "shared_library_extension": ".dll",
+  "link_library_suffix": ".dll.a",
+  "path_entries": [
+    "library"
+  ],
+  "primary_libraries": [
+    "library/Nector.dll",
+    "library/Nector.DslCompile.dll"
+  ]
+}

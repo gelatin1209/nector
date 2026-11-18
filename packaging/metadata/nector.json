@@ -1,0 +1,23 @@
+{
+  "name": "Nector",
+  "version": "0.1.0",
+  "package_layout": 1,
+  "directories": {
+    "shared_libraries": "library",
+    "link_libraries": "library/static",
+    "headers": "library/include",
+    "tools": "library",
+    "assets": "library/assets",
+    "locales": "library/locale",
+    "cmake": "library/cmake",
+    "pkgconfig": "library/pkgconfig",
+    "documentation": "document",
+    "licenses": "document/license",
+    "metadata": "metadata"
+  },
+  "default_locale": "en-US",
+  "default_font": "library/assets/deja_vu_sans.ttf",
+  "build_info": "library/build-info.txt",
+  "manifest": "metadata/manifest.json",
+  "checksums": "metadata/checksums.sha256"
+}

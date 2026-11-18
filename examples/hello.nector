@@ -1,0 +1,49 @@
+window "main" {
+    title = "Nector DSL UI";
+    width = 720;
+    height = 480;
+    padding = 20;
+    gap = 12;
+    background = #f4f6fb;
+
+    label "status" {
+        text = "DSL package loaded";
+        font_size = 24;
+        foreground = #182033;
+    }
+    button "run" {
+        text = "Run portable action";
+        height = 44;
+        on_click = "finish";
+    }
+    line_edit "editor" {
+        placeholder = "Edit this text";
+        text = "Nector";
+        on_text_changed = "edited";
+    }
+    slider "level" {
+        minimum = 0;
+        maximum = 100;
+        value = 35;
+        on_value_changed = "level_changed";
+    }
+    progress_bar "progress" {
+        minimum = 0;
+        maximum = 100;
+        value = 35;
+    }
+}
+
+action "finish" {
+    set "status".text = "Action invoked by Nector.DslCompile.dll";
+    set "progress".value = 100;
+    emit "finished", "done", 100;
+}
+
+action "edited" {
+    set "status".text = "Text changed";
+}
+
+action "level_changed" {
+    set "progress".value = 50;
+}

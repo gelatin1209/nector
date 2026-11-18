@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nector 0.1.0 DSL and Data Packages</title>
+<style>
+:root{color-scheme:light;--bg:#f4f7fb;--panel:#fff;--ink:#172033;--muted:#5d6a7e;--line:#dbe3ee;--accent:#2563eb;--code:#eef3fa}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif}main{max-width:1040px;margin:0 auto;padding:48px 24px}header{padding:32px;border-radius:18px;background:linear-gradient(135deg,#172554,#2563eb);color:#fff}header p{margin-bottom:0;color:#dbeafe}nav{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:20px}header nav a{color:#fff;text-decoration:none}header nav a:hover{text-decoration:underline}section{margin-top:22px;padding:26px 30px;background:var(--panel);border:1px solid var(--line);border-radius:14px}h1,h2,h3{margin-top:0;line-height:1.25}h2{font-size:1.3rem}h3{font-size:1.05rem;margin-bottom:.4rem}code,pre{font-family:Consolas,"SFMono-Regular",monospace}code{background:var(--code);padding:.12em .35em;border-radius:4px;overflow-wrap:anywhere}pre{overflow:auto;padding:18px;background:#111827;color:#e5e7eb;border-radius:10px;line-height:1.5}pre code{padding:0;background:none;color:inherit;overflow-wrap:normal}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:10px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted)}.table-wrap{overflow-x:auto}.muted{color:var(--muted)}.note{border-left:4px solid var(--accent);padding-left:16px}a{color:var(--accent)}li{margin:.35em 0}@media(max-width:640px){main{padding:20px 12px}header,section{padding:20px}table{font-size:14px}}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>DSL and data packages</h1>
+<p>Compile Nector text UI descriptions into portable scene and action data.</p>
+<nav aria-label="Documentation"><a href="../index.html">Package guide</a><a href="../api/index.html">API</a><a href="quick-start.html">Quick start</a><a href="dsl.html">DSL</a><a href="fonts.html">Fonts</a><a href="packaging.html">Packaging</a><a href="../changelog.html">Changelog</a></nav>
+</header>
+<section>
+<h2>What .dll-nector means</h2>
+<p class="note">Despite its suffix, a <code>.dll-nector</code> file is not an operating-system dynamic library. It is not native executable code and is not VM bytecode. Do not pass it to a system library loader.</p>
+<p>It is a Nector data container with three sections:</p>
+<div class="table-wrap">
+<table>
+<tr><th>Section</th><th>Contents</th></tr>
+<tr><td><code>Data</code></td><td>Serialized scene nodes and their properties.</td></tr>
+<tr><td><code>Text</code></td><td>Serialized actions and their operations.</td></tr>
+<tr><td><code>End</code></td><td>The terminating section used to complete and validate the package structure.</td></tr>
+</table>
+</div>
+<p>The CDSL library parses these sections and constructs a Nector scene. Use <code>nectorCdslLoadFile</code>, <code>nectorCdslLoadMemory</code>, or the corresponding <code>CdslPackage</code> methods rather than treating the file as a shared library.</p>
+</section>
+<section>
+<h2>A complete source example</h2>
+<p>Save the following as <code>my-ui.nector</code>. It uses the implemented window, label, button, action, property-assignment, and event-emission syntax.</p>
+<pre><code>window "main" {
+    title = "Nector DSL UI";
+    width = 480;
+    height = 240;
+    padding = 20;
+    gap = 12;
+    background = #f4f6fb;
+
+    label "status" {
+        text = "Ready";
+        font_size = 24;
+        foreground = #182033;
+    }
+    button "run" {
+        text = "Run action";
+        height = 44;
+        on_click = "finish";
+    }
+}
+
+action "finish" {
+    set "status".text = "Finished";
+    emit "finished", "done", 100;
+}</code></pre>
+<p>Node event properties connect interaction to action identifiers. In this example, clicking <code>run</code> invokes <code>finish</code>, which updates the label and emits a custom event.</p>
+</section>
+<section>
+<h2>Compile, inspect, and view</h2>
+<p>Load the environment scripts described in the <a href="quick-start.html">quick start</a>, then run the compiler from the package root:</p>
+<pre><code>nectorc my-ui.nector my-ui.dll-nector</code></pre>
+<p>The actual command-line contract is:</p>
+<pre><code>usage: nectorc &lt;input.nector&gt; &lt;output.dll-nector&gt;</code></pre>
+<p>There are two required positional paths. The compiler reports invalid usage or a compilation failure and does not require a system DLL suffix on the output.</p>
+<p>Validate the container without opening a window, or inspect its static binary structure:</p>
+<pre><code>ndvwr --check my-ui.dll-nector
+nddbg my-ui.dll-nector
+nddbg -d my-ui.dll-nector &gt; decompiled.nector
+nddbg -s my-ui.dll-nector
+nddbg -t my-ui.dll-nector
+nddbg -d -s -t --records --hex my-ui.dll-nector
+nddbg --all my-ui.dll-nector</code></pre>
+<p><code>ndvwr --check &lt;ui.dll-nector&gt;</code> reports whether the package is valid. The default nddbg report includes the summary and hexadecimal bytes with ASCII. <code>-d</code> decompiles the data package back to <code>.nector</code> DSL and emits pure DSL when used alone; <code>-s</code> lists node and action symbols; <code>-t</code> lists structure ranges. Options can be combined, and <code>--all</code> enables every view. Every nddbg option accepts one or two leading dashes, such as <code>-d</code>/<code>--d</code>, <code>-records</code>/<code>--records</code>, and <code>-help</code>/<code>--help</code>. Errors use an <code>error:</code> prefix; supporting consoles show the prefix in red and the message in white, while redirected output remains plain text without escape sequences. Addresses are absolute file offsets, not process memory addresses. Structure ranges use <code>0xSTART-0xEND</code> with an exclusive END. Neither validation nor inspection loads a scene, creates a window, or executes actions.</p>
+<p>Open a valid result with the bundled viewer:</p>
+<pre><code>ndvwr my-ui.dll-nector
+ndvwr my-ui.dll-nector path/to/font.otf</code></pre>
+<p>Its viewing contract is <code>ndvwr &lt;ui.dll-nector&gt; [font-file]</code>. Without the optional font argument, it checks <code>NECTOR_FONT</code> and then the package's default DejaVu Sans asset.</p>
+</section>
+<section>
+<h2>Use a package from C++</h2>
+<pre><code>#include &lt;nector.hpp&gt;
+
+int main() {
+    auto package = nector::CdslPackage::load("my-ui.dll-nector");
+    if (package.hasAction("finish")) {
+        package.call("finish");
+    }
+    auto scene = package.scene();
+    auto status = scene.findNode("status");
+}</code></pre>
+<p><code>CdslPackage::compileText</code> returns owned byte storage as a <code>std::vector</code>; <code>CdslPackage::compileFile</code> writes an output file directly. <code>loadMemory</code> loads bytes already held by the application. Actions can be queried with <code>hasAction</code>, <code>actionCount</code>, and <code>actionId</code>.</p>
+<p>The scene returned by <code>CdslPackage::scene()</code> is borrowed, so keep the package alive while using the scene or its nodes. C applications use <code>nectorCdslFreeBuffer</code> for memory returned by <code>nectorCdslCompileText</code>, and <code>nectorCdslDestroyPackage</code> for loaded packages.</p>
+<p>See the <a href="../api/index.html">API overview</a> and <a href="../../library/include/dsl_comp.h"><code>dsl_comp.h</code></a> for the complete declarations.</p>
+</section>
+</main>
+</body>
+</html>

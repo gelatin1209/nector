@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nector 0.1.0 Changelog</title>
+<style>
+:root{color-scheme:light;--bg:#f4f7fb;--panel:#fff;--ink:#172033;--muted:#5d6a7e;--line:#dbe3ee;--accent:#2563eb;--code:#eef3fa}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif}main{max-width:1040px;margin:0 auto;padding:48px 24px}header{padding:32px;border-radius:18px;background:linear-gradient(135deg,#172554,#2563eb);color:#fff}header p{margin-bottom:0;color:#dbeafe}nav{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:20px}header nav a{color:#fff;text-decoration:none}header nav a:hover{text-decoration:underline}section{margin-top:22px;padding:26px 30px;background:var(--panel);border:1px solid var(--line);border-radius:14px}h1,h2,h3{margin-top:0;line-height:1.25}h2{font-size:1.3rem}h3{font-size:1.05rem;margin-bottom:.4rem}code,pre{font-family:Consolas,"SFMono-Regular",monospace}code{background:var(--code);padding:.12em .35em;border-radius:4px;overflow-wrap:anywhere}pre{overflow:auto;padding:18px;background:#111827;color:#e5e7eb;border-radius:10px;line-height:1.5}pre code{padding:0;background:none;color:inherit;overflow-wrap:normal}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:10px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted)}.table-wrap{overflow-x:auto}.muted{color:var(--muted)}.note{border-left:4px solid var(--accent);padding-left:16px}a{color:var(--accent)}li{margin:.35em 0}@media(max-width:640px){main{padding:20px 12px}header,section{padding:20px}table{font-size:14px}}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>Changelog</h1>
+<p>Verified functionality and release-package additions for Nector 0.1.0.</p>
+<nav aria-label="Documentation"><a href="index.html">Package guide</a><a href="api/index.html">API</a><a href="guides/quick-start.html">Quick start</a><a href="guides/dsl.html">DSL</a><a href="guides/fonts.html">Fonts</a><a href="guides/packaging.html">Packaging</a><a href="changelog.html">Changelog</a></nav>
+</header>
+<section>
+<h2>0.1.0</h2>
+<h3>Current library functionality</h3>
+<ul>
+<li>C API headers for core utilities, rasterization graphics, fonts, images, animation, input, scenes, audio, platform windows, and CDSL.</li>
+<li>A flat C++17 <code>nector.hpp</code> entry point with move-only RAII resource wrappers, typed enums, and <code>nector::Error</code> exception reporting.</li>
+<li>RGBA surfaces, paths, painter state, clipping and transforms, solid colors, linear and radial gradients, stroking, masks, and surface composition.</li>
+<li>TTF, TTC, OTF, OTC, WOFF, and WOFF2 font loading from files or memory, collection face selection, font and text metrics, text drawing, and glyph paths.</li>
+<li>PNG, JPEG, BMP, and SVG image loading, RGBA image creation and pixel access, drawing, and PNG or BMP output.</li>
+<li>Keyframe and 1–60 frame animation with easing, looping, Behaviour spans, Flipbook images, and synchronized Hybrid transforms. <code>NKeystroke</code> provides 0/1/2 key states with a 500 ms hold threshold.</li>
+<li>Scene nodes and properties, UI callbacks, layout, drawing, animation binding, scrollable <code>NInterface::Row</code> controls, and lightweight glass <code>NInterface::Button</code> rendering.</li>
+<li>Audio loading from files or memory with playback, volume, looping, seeking, and duration controls.</li>
+<li>Application and window creation, event processing, rendering, and platform identification.</li>
+<li>Text UI compilation into Data/Text/End <code>.dll-nector</code> data packages, package loading, scene access, action invocation, and event callbacks.</li>
+</ul>
+<h3>Tools and resources</h3>
+<ul>
+<li><code>nectorc</code> compiles a <code>.nector</code> source file to a data package.</li>
+<li><code>ndvwr</code> displays a compiled package or validates it with <code>--check</code>.</li>
+<li><code>nddbg</code> statically inspects compiled packages with default objdump-style hexadecimal output, <code>-d</code> DSL decompilation, <code>-s</code> node/action symbols, and <code>-t</code> hexadecimal structure ranges. It does not create a window or execute actions.</li>
+<li>The distribution includes public headers, monolithic and modular libraries, link or import libraries, locale catalogs, redistributable fonts, environment scripts, and license notices.</li>
+</ul>
+<h3>Release package additions</h3>
+<ul>
+<li>Added this English API overview, quick start, DSL guide, font guide, packaging guide, and changelog.</li>
+<li>Added CMake package integration with <code>Nector::nector</code>, <code>Nector::nector_dsl_compile</code>, and modular <code>Nector::nector_&lt;module&gt;</code> targets.</li>
+<li>Added <code>nector.pc</code> for pkg-config discovery.</li>
+<li>Added release manifest and checksum metadata, plus <code>library/build-info.txt</code> for build-specific release information.</li>
+</ul>
+<p class="muted">This page records only the current 0.1.0 functionality and this release update; it does not describe earlier releases.</p>
+</section>
+</main>
+</body>
+</html>

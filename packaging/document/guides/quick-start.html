@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nector 0.1.0 Quick Start</title>
+<style>
+:root{color-scheme:light;--bg:#f4f7fb;--panel:#fff;--ink:#172033;--muted:#5d6a7e;--line:#dbe3ee;--accent:#2563eb;--code:#eef3fa}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif}main{max-width:1040px;margin:0 auto;padding:48px 24px}header{padding:32px;border-radius:18px;background:linear-gradient(135deg,#172554,#2563eb);color:#fff}header p{margin-bottom:0;color:#dbeafe}nav{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:20px}header nav a{color:#fff;text-decoration:none}header nav a:hover{text-decoration:underline}section{margin-top:22px;padding:26px 30px;background:var(--panel);border:1px solid var(--line);border-radius:14px}h1,h2,h3{margin-top:0;line-height:1.25}h2{font-size:1.3rem}h3{font-size:1.05rem;margin-bottom:.4rem}code,pre{font-family:Consolas,"SFMono-Regular",monospace}code{background:var(--code);padding:.12em .35em;border-radius:4px;overflow-wrap:anywhere}pre{overflow:auto;padding:18px;background:#111827;color:#e5e7eb;border-radius:10px;line-height:1.5}pre code{padding:0;background:none;color:inherit;overflow-wrap:normal}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:10px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted)}.table-wrap{overflow-x:auto}.muted{color:var(--muted)}.note{border-left:4px solid var(--accent);padding-left:16px}a{color:var(--accent)}li{margin:.35em 0}@media(max-width:640px){main{padding:20px 12px}header,section{padding:20px}table{font-size:14px}}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>Quick start</h1>
+<p>Configure a Nector 0.1.0 package, build a C++17 application, and run the bundled tools.</p>
+<nav aria-label="Documentation"><a href="../index.html">Package guide</a><a href="../api/index.html">API</a><a href="quick-start.html">Quick start</a><a href="dsl.html">DSL</a><a href="fonts.html">Fonts</a><a href="packaging.html">Packaging</a><a href="../changelog.html">Changelog</a></nav>
+</header>
+<section>
+<h2>1. Load the package environment</h2>
+<p>Commands on this page start at the extracted package root. Use binaries built for the current operating system and architecture.</p>
+<h3>Windows Command Prompt</h3>
+<pre><code>call metadata\nctorvars.cmd</code></pre>
+<p>The script adds <code>library</code> to <code>PATH</code>, allowing Windows to find the DLLs and tools in the same directory.</p>
+<h3>Linux and macOS</h3>
+<pre><code>. metadata/nctorvars.sh</code></pre>
+<p>Source the script rather than executing it in a child process. It adds the tools to <code>PATH</code> and configures <code>LD_LIBRARY_PATH</code> on Linux or <code>DYLD_LIBRARY_PATH</code> on macOS.</p>
+<p>Both scripts define <code>NECTOR_HOME</code>, <code>NECTOR_INCLUDE</code>, <code>NECTOR_STATIC</code>, <code>NECTOR_TOOLS</code>, <code>NECTOR_ASSETS</code>, <code>NECTOR_CONFIG</code>, <code>NECTOR_LOCALE</code>, <code>NECTOR_FONT</code>, <code>Nector_DIR</code>, and <code>PKG_CONFIG_PATH</code>. The assets directory itself is not added to <code>PATH</code>.</p>
+</section>
+<section>
+<h2>2. Run the bundled tools</h2>
+<p>Compile a text UI description, validate its container, inspect its static records, and open the resulting data package:</p>
+<pre><code>nectorc my-ui.nector my-ui.dll-nector
+ndvwr --check my-ui.dll-nector
+nddbg -d my-ui.dll-nector &gt; decompiled.nector
+nddbg -s -t my-ui.dll-nector
+nddbg --all my-ui.dll-nector
+ndvwr my-ui.dll-nector
+ndvwr my-ui.dll-nector path/to/font.otf</code></pre>
+<p><code>nectorc</code> requires exactly an input and output path. <code>ndvwr --check</code> validates a package without creating a window; normal <code>ndvwr</code> accepts one package path and an optional font path. <code>nddbg</code> includes a hexadecimal dump by default, decompiles DSL with <code>-d</code>, lists symbols with <code>-s</code>, and reports hexadecimal structure ranges with <code>-t</code>. Addresses are file offsets and range ends are exclusive. Inspection does not load a scene or execute actions. An explicit viewer font argument takes precedence over <code>NECTOR_FONT</code>.</p>
+<p class="note">A <code>.dll-nector</code> file is a Nector Data/Text/End data package, not an operating-system DLL or VM bytecode. See the <a href="dsl.html">DSL guide</a> for source syntax and runtime loading.</p>
+</section>
+<section>
+<h2>3. Build with CMake</h2>
+<p>Use the packaged CMake configuration and imported targets. If CMake does not find the package automatically, set <code>Nector_DIR</code> to the directory that contains <code>NectorConfig.cmake</code>.</p>
+<pre><code>cmake_minimum_required(VERSION 3.20)
+project(MyNectorApp LANGUAGES CXX)
+
+find_package(Nector CONFIG REQUIRED)
+add_executable(my_app main.cpp)
+target_compile_features(my_app PRIVATE cxx_std_17)
+target_link_libraries(my_app PRIVATE Nector::nector Nector::nector_dsl_compile)</code></pre>
+<p>Link only <code>Nector::nector</code> if the application does not use DSL. Configure and build with:</p>
+<p>After loading the environment, pass the configured package directory explicitly:</p>
+<pre><code>rem Windows Command Prompt
+cmake -S . -B build -DNector_DIR="%Nector_DIR%"
+cmake --build build
+
+# Linux and macOS
+cmake -S . -B build -DNector_DIR="$Nector_DIR"
+cmake --build build</code></pre>
+<p>The equivalent <code>main.cpp</code> below loads the compiled package and invokes its <code>finish</code> action:</p>
+<pre><code>#include &lt;nector.hpp&gt;
+
+int main() {
+    auto package = nector::CdslPackage::load("my-ui.dll-nector");
+    if (package.hasAction("finish")) {
+        package.call("finish");
+    }
+}</code></pre>
+<p>Load <code>nctorvars</code> before running the application, or otherwise arrange the platform's shared-library search path. The <a href="packaging.html">packaging guide</a> lists monolithic and modular CMake targets.</p>
+</section>
+<section>
+<h2>4. Build with pkg-config</h2>
+<p>The environment scripts add <code>library/pkgconfig</code> to <code>PKG_CONFIG_PATH</code>. After loading the environment on Linux or macOS:</p>
+<pre><code>pkg-config --cflags --libs nector
+c++ -std=c++17 main.cpp $(pkg-config --cflags --libs nector) -o my_app</code></pre>
+<p>Use the resulting flags rather than manually guessing library search paths and transitive linker options. Runtime shared-library discovery remains a separate step.</p>
+</section>
+<section>
+<h2>5. Use timelines and interface controls</h2>
+<p>The complete C++ entry point exposes frame animation, deterministic key states, and interface controls. Frame counts are limited to 1–60. Behaviour frame ranges are inclusive, and a Hybrid samples its transform and image from the same timeline.</p>
+<pre><code>#include &lt;nector.hpp&gt;
+
+NImation animation(60);
+animation.addBehaviour(NImation::Behaviour::Forward, 0, 29, 0.0, 120.0);
+animation.addBehaviour(NImation::Behaviour::TurnRight, 30, 59, 0.0, 90.0);
+animation.start();
+animation.tick(1000.0 / 60.0);
+const auto transform = animation.sampleTransform();
+
+nector::Scene scene("Controls", 640, 480);
+NInterface interface(scene);
+NInterface::Row row(interface, "items");
+row.layout = 1; // vertical; 0 is horizontal
+NInterface::Button button(interface, row, "accept", "Accept");
+button.glass = true;
+interface.layout(640, 480);</code></pre>
+<p>Use <code>NImation::Flipbook flipbook(21)</code> for image-only playback and <code>NImation::Hybrid hybrid(21)</code> when each frame also needs movement or rotation. <code>NKeystroke::state(NKeystroke::signal::A)</code> returns 0 for released, 1 for held up to 500 ms, and 2 only after more than 500 ms.</p>
+</section>
+<section>
+<h2>Next steps</h2>
+<ul>
+<li>Read the <a href="../api/index.html">API overview</a> for C functions and C++ RAII wrappers.</li>
+<li>Follow the <a href="fonts.html">font guide</a> for file formats, collections, and CJK selection.</li>
+<li>Keep the complete directory together when relocating the package.</li>
+</ul>
+</section>
+</main>
+</body>
+</html>

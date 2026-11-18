@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nector 0.1.0 Packaging Guide</title>
+<style>
+:root{color-scheme:light;--bg:#f4f7fb;--panel:#fff;--ink:#172033;--muted:#5d6a7e;--line:#dbe3ee;--accent:#2563eb;--code:#eef3fa}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif}main{max-width:1040px;margin:0 auto;padding:48px 24px}header{padding:32px;border-radius:18px;background:linear-gradient(135deg,#172554,#2563eb);color:#fff}header p{margin-bottom:0;color:#dbeafe}nav{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:20px}header nav a{color:#fff;text-decoration:none}header nav a:hover{text-decoration:underline}section{margin-top:22px;padding:26px 30px;background:var(--panel);border:1px solid var(--line);border-radius:14px}h1,h2,h3{margin-top:0;line-height:1.25}h2{font-size:1.3rem}h3{font-size:1.05rem;margin-bottom:.4rem}code,pre{font-family:Consolas,"SFMono-Regular",monospace}code{background:var(--code);padding:.12em .35em;border-radius:4px;overflow-wrap:anywhere}pre{overflow:auto;padding:18px;background:#111827;color:#e5e7eb;border-radius:10px;line-height:1.5}pre code{padding:0;background:none;color:inherit;overflow-wrap:normal}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:10px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted)}.table-wrap{overflow-x:auto}.muted{color:var(--muted)}.note{border-left:4px solid var(--accent);padding-left:16px}a{color:var(--accent)}li{margin:.35em 0}@media(max-width:640px){main{padding:20px 12px}header,section{padding:20px}table{font-size:14px}}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>Packaging and integration</h1>
+<p>Understand the Nector 0.1.0 distribution layout, build metadata, and verification files.</p>
+<nav aria-label="Documentation"><a href="../index.html">Package guide</a><a href="../api/index.html">API</a><a href="quick-start.html">Quick start</a><a href="dsl.html">DSL</a><a href="fonts.html">Fonts</a><a href="packaging.html">Packaging</a><a href="../changelog.html">Changelog</a></nav>
+</header>
+<section>
+<h2>Directory structure</h2>
+<p>Paths are relative to the extracted package root. Move the complete directory as one unit so relative resource and runtime paths continue to work.</p>
+<pre><code>library/
+  Nector.dll                  # monolithic library; platform naming varies
+  Nector.DslCompile.dll       # DSL compiler and package loader
+  Nector.Core.dll             # modular libraries; platform naming varies
+  Nector.Rasterization.dll
+  Nector.Font.dll
+  Nector.Image.dll
+  NImation.dll
+  Nector.Input.dll
+  Nector.Scene.dll
+  Nector.Audio.dll
+  Nector.Platform.dll
+  Nector.Interface.dll
+  nectorc                     # command-line UI compiler
+  ndvwr                       # compiled-package viewer and validator
+  nddbg                       # static hex, DSL, symbol, and structure inspector
+  static/                     # link or import libraries
+  include/                    # public .h files and nector.hpp
+  assets/                     # redistributable fonts
+  locale/                     # JSON message catalogs
+  cmake/                      # NectorConfig.cmake and imported targets
+  pkgconfig/                  # nector.pc
+  build-info.txt              # build-specific release information
+document/
+  index.html
+  api/index.html
+  guides/quick-start.html
+  guides/dsl.html
+  guides/fonts.html
+  guides/packaging.html
+  changelog.html
+license/                    # Nector and third-party license notices
+metadata/
+  nector.json                 # platform-independent package map
+  nector.windows.json
+  nector.linux.json
+  nector.macos.json
+  nctorvars.cmd
+  nctorvars.sh
+  version.txt
+  manifest.json               # relative paths, sizes, and SHA-256 hashes
+  checksums.sha256            # package integrity checksums</code></pre>
+<p>On Windows, shared libraries are in <code>library</code> and import libraries are in <code>library/static</code>. Import libraries use exact DLL base names such as <code>Nector.dll.a</code> and <code>NImation.dll.a</code>, without a <code>lib</code> prefix; pass their full paths to the linker. Linux and macOS use their normal shared-library extensions and naming conventions. Only binaries matching the host platform and architecture can be loaded.</p>
+<p class="note"><code>library/build-info.txt</code> is at the library root, alongside the shared libraries. It is not in <code>library/static</code> or <code>metadata</code>.</p>
+</section>
+<section>
+<h2>Environment and metadata</h2>
+<p>The environment scripts derive paths from the package location rather than requiring a fixed installation directory. They set include, link, tool, asset, locale, configuration, and font variables, plus <code>Nector_DIR</code> and <code>PKG_CONFIG_PATH</code> for build-system integration. Windows adds <code>library</code> to <code>PATH</code> so tools can find their DLLs beside the executables; the shell script configures the appropriate runtime library path on Linux or macOS.</p>
+<p><code>metadata/nector.json</code> records the common directory map, default locale, and default font. Platform JSON files describe platform-specific library and environment settings. <code>metadata/version.txt</code> records the package, ABI, and package-layout versions.</p>
+</section>
+<section>
+<h2>CMake package</h2>
+<p>Consume the release with <code>find_package(Nector CONFIG REQUIRED)</code>. If necessary, set <code>Nector_DIR</code> to the directory containing <code>NectorConfig.cmake</code>.</p>
+<pre><code>find_package(Nector CONFIG REQUIRED)
+add_executable(my_app main.cpp)
+target_compile_features(my_app PRIVATE cxx_std_17)
+target_link_libraries(my_app PRIVATE Nector::nector Nector::nector_dsl_compile)</code></pre>
+<div class="table-wrap">
+<table>
+<tr><th>Target</th><th>Purpose</th></tr>
+<tr><td><code>Nector::nector</code></td><td>Monolithic Nector implementation.</td></tr>
+<tr><td><code>Nector::nector_dsl_compile</code></td><td>DSL compilation and data-package loading.</td></tr>
+<tr><td><code>Nector::nector_&lt;module&gt;</code></td><td>Individual module, where <code>&lt;module&gt;</code> is <code>core</code>, <code>rasterization</code>, <code>font</code>, <code>image</code>, <code>nimation</code>, <code>input</code>, <code>scene</code>, <code>audio</code>, <code>platform</code>, or <code>interface</code>.</td></tr>
+</table>
+</div>
+<p>Use the monolithic target for the simplest integration, or link the modular targets required by the application. Keep runtime shared-library discovery configured when launching the built program.</p>
+</section>
+<section>
+<h2>pkg-config</h2>
+<p>The release supplies <code>library/pkgconfig/nector.pc</code>. The environment scripts add its containing directory to <code>PKG_CONFIG_PATH</code>; after loading the environment on Linux or macOS, query the compiler and linker flags:</p>
+<pre><code>pkg-config --modversion nector
+pkg-config --cflags --libs nector
+c++ -std=c++17 main.cpp $(pkg-config --cflags --libs nector) -o my_app</code></pre>
+<p>The version query and flag output can also be used by build-system discovery. The package name passed to <code>pkg-config</code> is <code>nector</code>, without the <code>.pc</code> suffix.</p>
+</section>
+<section>
+<h2>Manifest, checksums, and build information</h2>
+<ul>
+<li><code>metadata/manifest.json</code> inventories relative file paths, sizes, and SHA-256 hashes. It excludes itself and the checksum file.</li>
+<li><code>metadata/checksums.sha256</code> covers every package file except itself, including the manifest. From the package root, systems with <code>sha256sum</code> can run <code>sha256sum -c metadata/checksums.sha256</code>.</li>
+<li><code>library/build-info.txt</code> identifies build-specific information for the binary release and should remain with the library files. Normal development builds preserve it; only an explicit release build regenerates it.</li>
+</ul>
+<p>Keep <code>license</code> with redistributed packages. The individual notices contain the authoritative Nector and third-party license terms.</p>
+</section>
+</main>
+</body>
+</html>

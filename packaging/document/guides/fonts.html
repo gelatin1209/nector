@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nector 0.1.0 Font Guide</title>
+<style>
+:root{color-scheme:light;--bg:#f4f7fb;--panel:#fff;--ink:#172033;--muted:#5d6a7e;--line:#dbe3ee;--accent:#2563eb;--code:#eef3fa}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif}main{max-width:1040px;margin:0 auto;padding:48px 24px}header{padding:32px;border-radius:18px;background:linear-gradient(135deg,#172554,#2563eb);color:#fff}header p{margin-bottom:0;color:#dbeafe}nav{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:20px}header nav a{color:#fff;text-decoration:none}header nav a:hover{text-decoration:underline}section{margin-top:22px;padding:26px 30px;background:var(--panel);border:1px solid var(--line);border-radius:14px}h1,h2,h3{margin-top:0;line-height:1.25}h2{font-size:1.3rem}h3{font-size:1.05rem;margin-bottom:.4rem}code,pre{font-family:Consolas,"SFMono-Regular",monospace}code{background:var(--code);padding:.12em .35em;border-radius:4px;overflow-wrap:anywhere}pre{overflow:auto;padding:18px;background:#111827;color:#e5e7eb;border-radius:10px;line-height:1.5}pre code{padding:0;background:none;color:inherit;overflow-wrap:normal}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:10px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted)}.table-wrap{overflow-x:auto}.muted{color:var(--muted)}.note{border-left:4px solid var(--accent);padding-left:16px}a{color:var(--accent)}li{margin:.35em 0}@media(max-width:640px){main{padding:20px 12px}header,section{padding:20px}table{font-size:14px}}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>Fonts</h1>
+<p>Load bundled or application-provided fonts with Nector 0.1.0.</p>
+<nav aria-label="Documentation"><a href="../index.html">Package guide</a><a href="../api/index.html">API</a><a href="quick-start.html">Quick start</a><a href="dsl.html">DSL</a><a href="fonts.html">Fonts</a><a href="packaging.html">Packaging</a><a href="../changelog.html">Changelog</a></nav>
+</header>
+<section>
+<h2>Supported containers</h2>
+<div class="table-wrap">
+<table>
+<tr><th>Format</th><th>Loading notes</th></tr>
+<tr><td><code>TTF</code></td><td>TrueType font files.</td></tr>
+<tr><td><code>TTC</code></td><td>TrueType collections; select a zero-based face index.</td></tr>
+<tr><td><code>OTF</code></td><td>OpenType fonts, including supported CFF outlines.</td></tr>
+<tr><td><code>OTC</code></td><td>OpenType collections; select a zero-based face index.</td></tr>
+<tr><td><code>WOFF</code></td><td>Web Open Font Format data.</td></tr>
+<tr><td><code>WOFF2</code></td><td>WOFF 2 data using the supported Brotli-based decoding path.</td></tr>
+</table>
+</div>
+<p>Load a file with <code>nectorLoadFont(path, face_index, &amp;font)</code> or <code>nector::Font(path, face_index)</code>. For bytes already in memory, use <code>nectorLoadFontMemory</code> or <code>Font::fromMemory</code>. <code>nectorFontGetFaceCount</code> and <code>Font::faceCount</code> inspect in-memory collection data before selecting a face.</p>
+<pre><code>#include &lt;nector.hpp&gt;
+
+int main() {
+    nector::Font font("library/assets/deja_vu_sans.ttf", 0);
+    const auto font_metrics = font.metrics(24.0F);
+    const auto text_metrics = font.measureText(24.0F, "Hello, Nector");
+    return text_metrics.glyph_count &gt; 0 &amp;&amp; font_metrics.line_height &gt; 0 ? 0 : 1;
+}</code></pre>
+</section>
+<section>
+<h2>Package assets and PATH</h2>
+<p>Redistributable fonts are files in <code>library/assets</code>; they are not executables. The environment scripts deliberately do not add <code>library/assets</code> to <code>PATH</code>. Setting <code>PATH</code> is for shared libraries and tools, not font discovery.</p>
+<p>The library itself loads the path or memory supplied by the application. The bundled <code>ndvwr</code> tool uses this order:</p>
+<ol>
+<li>An explicit font-file command-line argument, when supplied.</li>
+<li>The path in <code>NECTOR_FONT</code>, when nonempty.</li>
+<li><code>deja_vu_sans.ttf</code> in <code>library/assets</code>, located relative to the tool executable.</li>
+</ol>
+<p>This relative fallback keeps the package relocatable. Applications using the API directly should pass their own font path and select a face index where needed.</p>
+</section>
+<section>
+<h2>Default and CJK environment variables</h2>
+<p>Both <code>metadata/nctorvars.cmd</code> and <code>metadata/nctorvars.sh</code> initialize these variables:</p>
+<div class="table-wrap">
+<table>
+<tr><th>Variable</th><th>Packaged file</th></tr>
+<tr><td><code>NECTOR_FONT</code></td><td><code>library/assets/deja_vu_sans.ttf</code>, the default for the bundled tools</td></tr>
+<tr><td><code>NECTOR_FONT_SOURCE_HAN_SERIF</code></td><td><code>library/assets/source_han_serif_sc.otf</code></td></tr>
+<tr><td><code>NECTOR_FONT_SOURCE_HAN_SANS</code></td><td><code>library/assets/source_han_sans_sc.otf</code></td></tr>
+<tr><td><code>NECTOR_FONT_NOTO_SANS_CJK</code></td><td><code>library/assets/noto_sans_cjk_sc.otf</code></td></tr>
+</table>
+</div>
+<p>After loading the Windows environment, select Noto Sans CJK for the tools with:</p>
+<pre><code>set "NECTOR_FONT=%NECTOR_FONT_NOTO_SANS_CJK%"
+ndvwr my-ui.dll-nector</code></pre>
+<p>After sourcing the shell environment on Linux or macOS, select Source Han Sans with:</p>
+<pre><code>export NECTOR_FONT="$NECTOR_FONT_SOURCE_HAN_SANS"
+ndvwr my-ui.dll-nector</code></pre>
+<p>Alternatively, pass the selected font file as the optional tool argument. Font and third-party license notices remain in <code>license</code>.</p>
+</section>
+</main>
+</body>
+</html>

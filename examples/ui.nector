@@ -1,0 +1,65 @@
+window "ui_demo" {
+    title = "Nector UI example";
+    width = 640;
+    height = 480;
+    padding = 24;
+    gap = 14;
+    background = #f5f7fb;
+
+    label "title" {
+        text = "Nector interact lol";
+        font_size = 26;
+        foreground = #172033;
+    }
+    label "status" {
+        text = "Ready";
+        font_size = 16;
+        foreground = #46536a;
+    }
+    line_edit "name" {
+        placeholder = "Please input text";
+        text = "Nector";
+        on_text_changed = "text_changed";
+    }
+    slider "level" {
+        minimum = 0;
+        maximum = 100;
+        value = 30;
+        on_value_changed = "level_changed";
+    }
+    progress_bar "progress" {
+        minimum = 0;
+        maximum = 100;
+        value = 30;
+    }
+    button "apply" {
+        text = "Setting";
+        height = 44;
+        on_click = "apply";
+    }
+    button "reset" {
+        text = "reset";
+        height = 44;
+        on_click = "reset";
+    }
+}
+
+action "apply" {
+    set "status".text = "apply";
+    set "progress".value = 100;
+    emit "applied", "done", 100;
+}
+
+action "text_changed" {
+    set "status".text = "text changed";
+}
+
+action "level_changed" {
+    set "status".text = "progress changed";
+    set "progress".value = 50;
+}
+
+action "reset" {
+    set "status".text = "reset.";
+    set "progress".value = 0;
+}

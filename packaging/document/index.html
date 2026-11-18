@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nector 0.1.0 Package Guide</title>
+<style>
+:root{color-scheme:light;--bg:#f4f7fb;--panel:#fff;--ink:#172033;--muted:#5d6a7e;--line:#dbe3ee;--accent:#2563eb;--code:#eef3fa}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif}main{max-width:1040px;margin:0 auto;padding:48px 24px}header{padding:32px;border-radius:18px;background:linear-gradient(135deg,#172554,#2563eb);color:#fff}header p{margin-bottom:0;color:#dbeafe}section{margin-top:22px;padding:26px 30px;background:var(--panel);border:1px solid var(--line);border-radius:14px}h1,h2{margin-top:0;line-height:1.25}h2{font-size:1.3rem}code,pre{font-family:Consolas,"SFMono-Regular",monospace}code{background:var(--code);padding:.12em .35em;border-radius:4px}pre{overflow:auto;padding:18px;background:#111827;color:#e5e7eb;border-radius:10px;line-height:1.5}pre code{padding:0;background:none;color:inherit}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:10px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted)}.muted{color:var(--muted)}.note{border-left:4px solid var(--accent);padding-left:16px}a{color:var(--accent)}@media(max-width:640px){main{padding:20px 12px}section{padding:20px}table{font-size:14px}}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>Nector 0.1.0</h1>
+<p>Portable package layout, build integration, tools, metadata, localization, and licenses.</p>
+</header>
+<section>
+<h2>Package layout</h2>
+<p>All paths below are relative to the package root. Move the complete directory as one unit.</p>
+<pre><code>library/
+  Nector.dll                 # .so on Linux, .dylib on macOS
+  Nector.DslCompile.dll
+  Nector.*.dll
+  NImation.dll
+  Nector.Interface.dll
+  nectorc                    # command-line UI compiler
+  ndvwr                      # compiled-package viewer and validator
+  nddbg                      # static hex, DSL, symbol, and structure inspector
+  static/                    # .a link/import libraries
+  include/                   # public .h and .hpp headers
+  locale/                    # JSON i18n resources
+  assets/                    # redistributable font files
+  cmake/                     # CMake package configuration
+  pkgconfig/                 # pkg-config metadata
+  build-info.txt             # compiler, target, and ABI information
+document/
+  index.html
+  api/                       # C and C++ API reference
+  guides/                    # integration and usage guides
+  changelog.html
+license/                   # Nector MIT and third-party licenses
+metadata/
+  manifest.json              # file sizes and SHA-256 hashes
+  checksums.sha256            # complete package checksums
+  nector.json                # common package configuration
+  nector.windows.json
+  nector.linux.json
+  nector.macos.json
+  nctorvars.cmd
+  nctorvars.sh
+  version.txt</code></pre>
+</section>
+<section>
+<h2>Documentation</h2>
+<table>
+<tr><th>Page</th><th>Contents</th></tr>
+<tr><td><a href="api/index.html">API reference</a></td><td>Public C headers and the C++ RAII entry point.</td></tr>
+<tr><td><a href="guides/quick-start.html">Quick start</a></td><td>Environment setup, CMake, pkg-config, and tools.</td></tr>
+<tr><td><a href="guides/dsl.html">CDSL guide</a></td><td>Compiling and loading Nector interface packages.</td></tr>
+<tr><td><a href="guides/fonts.html">Font guide</a></td><td>Supported formats, assets, and font environment variables.</td></tr>
+<tr><td><a href="guides/packaging.html">Packaging guide</a></td><td>Relocatable integration, build information, and release verification.</td></tr>
+<tr><td><a href="changelog.html">Changelog</a></td><td>Current release features and package additions.</td></tr>
+</table>
+</section>
+<section>
+<h2>Quick start on Windows</h2>
+<p>Run these commands from the package root. The environment script adds both the DLL directory and <code>nectorc</code> to <code>PATH</code>.</p>
+<pre><code>call metadata\nctorvars.cmd
+nectorc your-ui.nector your-ui.dll-nector
+ndvwr --check your-ui.dll-nector
+nddbg your-ui.dll-nector
+nddbg -d your-ui.dll-nector > decompiled.nector
+nddbg -s -t your-ui.dll-nector
+ndvwr your-ui.dll-nector</code></pre>
+<p>The viewer uses <code>NECTOR_FONT</code> or locates <code>deja_vu_sans.ttf</code> in <code>library/assets</code> relative to its executable in <code>library</code>. No fixed installation directory is required, and the assets directory is not added to <code>PATH</code>.</p>
+</section>
+<section>
+<h2>Quick start on Linux and macOS</h2>
+<pre><code>. metadata/nctorvars.sh
+nectorc your-ui.nector your-ui.dll-nector
+ndvwr --check your-ui.dll-nector
+nddbg your-ui.dll-nector
+nddbg -d your-ui.dll-nector > decompiled.nector
+nddbg -s -t your-ui.dll-nector
+ndvwr your-ui.dll-nector</code></pre>
+<p>The shell script configures <code>LD_LIBRARY_PATH</code> on Linux or <code>DYLD_LIBRARY_PATH</code> on macOS. Only binaries built for the current platform can be used.</p>
+</section>
+<section>
+<h2>Include and link</h2>
+<p>The single public C++ entry point is <code>nector.hpp</code>. Nector is not header-only; link the implementation libraries and keep the shared libraries discoverable at runtime.</p>
+<pre><code>#include &lt;nector.hpp&gt;
+
+auto package = nector::CdslPackage::load("your-ui.dll-nector");
+package.call("finish");</code></pre>
+<p>Windows/GCC example, after loading <code>nctorvars.cmd</code>:</p>
+<pre><code>g++ -std=c++17 main.cpp -Ilibrary/include library/static/Nector.dll.a library/static/Nector.DslCompile.dll.a -o app.exe</code></pre>
+<p>Linux/macOS shared-library example:</p>
+<pre><code>c++ -std=c++17 main.cpp -Ilibrary/include -Llibrary -lNector -lNector.DslCompile -o app</code></pre>
+<p class="note">A <code>.dll-nector</code> file is a Nector data package with Data, Text, and End sections. It is not an operating-system dynamic library or VM bytecode.</p>
+</section>
+<section>
+<h2>Metadata and localization</h2>
+<table>
+<tr><th>File</th><th>Purpose</th></tr>
+<tr><td><code>metadata/nector.json</code></td><td>Platform-independent relative directory map and default resources.</td></tr>
+<tr><td><code>metadata/nector.*.json</code></td><td>Platform library naming and environment settings.</td></tr>
+<tr><td><code>metadata/version.txt</code></td><td>Package, ABI, and layout versions.</td></tr>
+<tr><td><code>library/locale/*.json</code></td><td>Message catalogs with locale, fallback, and messages fields.</td></tr>
+</table>
+<p>Environment variables include <code>NECTOR_HOME</code>, <code>NECTOR_INCLUDE</code>, <code>NECTOR_STATIC</code>, <code>NECTOR_TOOLS</code>, <code>NECTOR_ASSETS</code>, <code>NECTOR_CONFIG</code>, <code>NECTOR_LOCALE</code>, <code>NECTOR_FONT</code>, <code>Nector_DIR</code>, and <code>PKG_CONFIG_PATH</code>. Additional CJK font selections are <code>NECTOR_FONT_SOURCE_HAN_SERIF</code>, <code>NECTOR_FONT_SOURCE_HAN_SANS</code>, and <code>NECTOR_FONT_NOTO_SANS_CJK</code>.</p>
+</section>
+<section>
+<h2>Licenses</h2>
+<p>Nector is distributed under the MIT License. Third-party notices are in <code>license</code>: zlib, libpng, IJG JPEG, Brotli, miniaudio, DejaVu, Roboto, Source Code Pro, Noto Sans, Source Han Serif, Source Han Sans, Noto Sans CJK, and Comic Pro Atlas.</p>
+<p>Comic Sans MS is not bundled because it is proprietary. Comic Pro Atlas is included as the original TTF under the SIL Open Font License.</p>
+<p>No GPL or LGPL dependency was found in this package. Each third-party component retains its original permissive or font-specific license.</p>
+<p class="muted">See the individual license files for the legally authoritative terms.</p>
+</section>
+</main>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "locale": "en-US",
+  "fallback": "en-US",
+  "messages": {
+    "app.title": "Nector UI",
+    "status.ready": "Ready",
+    "status.applied": "Settings applied",
+    "status.reset": "Defaults restored",
+    "action.apply": "Apply",
+    "action.reset": "Reset",
+    "input.name": "Name",
+    "value.volume": "Volume"
+  }
+}

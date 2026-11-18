@@ -1,0 +1,14 @@
+{
+  "locale": "zh-CN",
+  "fallback": "en-US",
+  "messages": {
+    "app.title": "Nector 界面",
+    "status.ready": "就绪",
+    "status.applied": "设置已应用",
+    "status.reset": "已恢复默认值",
+    "action.apply": "应用",
+    "action.reset": "重置",
+    "input.name": "名称",
+    "value.volume": "音量"
+  }
+}
